@@ -8,11 +8,15 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <elf.h>
+#include <sys/mman.h>
 #include "../libft/libft.h"
 
 typedef struct data
 {
     int fd;
+    off_t lenght_file;
+    Elf64_Ehdr *header;
 } data;
 
 void    exit_clean(data db, char *err);

@@ -1,9 +1,12 @@
 NAME        = woody_woodpacker
 CC          = gcc
-CFLAGS      = -Wall -Wextra -Werror -I $(INC_DIR)
+CFLAGS      = -Wall -Wextra -Werror -I $(INC_DIR) -I $(LIB_DIR)
 SRC_DIR     = src
 INC_DIR     = header
 OBJ_DIR     = obj
+LIB_DIR     = libft
+LIBFT       = $(LIB_DIR)/libft.a
+LDFLAGS     = -L$(LIB_DIR) -lft
 AS          = nasm
 ASFLAGS     = -f elf64
 SRCS        = $(SRC_DIR)/main.c $(SRC_DIR)/utils.c
@@ -14,9 +17,13 @@ RESET       = \033[0m
 
 all: $(NAME)
 
-$(NAME): $(OBJS)
-	@$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
+$(NAME): $(LIBFT) $(OBJS)
+	@$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $(NAME)
 	@echo "$(GREEN)[+] $(NAME) compilé avec succès !$(RESET)"
+
+$(LIBFT):
+	@echo "Compiling libft..."
+	@make -sC $(LIB_DIR)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c $(INC_DIR)/woody.h | $(OBJ_DIR)
 	@$(CC) $(CFLAGS) -c $< -o $@
@@ -31,11 +38,13 @@ $(OBJ_DIR):
 
 clean:
 	@rm -rf $(OBJ_DIR)
-	@echo "$(RED)[-] Objets et dossier $(OBJ_DIR) supprimés.$(RESET)"
+	@make clean -sC $(LIB_DIR)
+	@echo "$(RED)[- ] Objets supprimés (woody & libft).$(RESET)"
 
 fclean: clean
 	@rm -f $(NAME)
-	@echo "$(RED)[-] Exécutable $(NAME) supprimé.$(RESET)"
+	@make fclean -sC $(LIB_DIR)
+	@echo "$(RED)[- ] Exécutable et libft.a supprimés.$(RESET)"
 
 re: fclean all
 
