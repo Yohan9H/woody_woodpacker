@@ -1,6 +1,6 @@
 NAME        = woody_woodpacker
 CC          = gcc
-CFLAGS      = -Wall -Wextra -Werror -I $(INC_DIR) -I $(LIB_DIR)
+CFLAGS      = -Wall -Wextra -Werror -g -I $(INC_DIR) -I $(LIB_DIR)
 SRC_DIR     = src
 INC_DIR     = header
 OBJ_DIR     = obj
