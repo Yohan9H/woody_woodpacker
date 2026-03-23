@@ -10,7 +10,7 @@ void    exit_clean(data *db, char *err, int exit_code)
     if (db->fd)
         close(db->fd);
     if (db->header)
-        munmap(db->header, db->lenght_file);
+        munmap(db->header, db->length_file);
 
     exit(exit_code);
 }

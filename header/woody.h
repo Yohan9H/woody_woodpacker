@@ -15,8 +15,9 @@
 typedef struct data
 {
     int fd;
-    off_t lenght_file;
+    off_t length_file;
     Elf64_Ehdr *header;
+    uint8_t  *begin_seg;
 } data;
 
 void    exit_clean(data *db, char *err, int exit_code);
