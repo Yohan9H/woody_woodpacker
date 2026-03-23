@@ -19,7 +19,7 @@ typedef struct data
     Elf64_Ehdr *header;
 } data;
 
-void    exit_clean(data db, char *err, int exit_code);
+void    exit_clean(data *db, char *err, int exit_code);
 void    print_elf_header(Elf64_Ehdr *h);
 
 #endif
