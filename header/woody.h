@@ -14,10 +14,10 @@
 
 typedef struct data
 {
-    int fd;
-    off_t length_file;
-    Elf64_Ehdr *header;
-    uint8_t  *begin_seg;
+    int         fd;
+    off_t       length_file;
+    Elf64_Ehdr  *header;
+    Elf64_Phdr  *seg_load;
 } data;
 
 void    exit_clean(data *db, char *err, int exit_code);
