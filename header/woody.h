@@ -15,9 +15,12 @@
 typedef struct data
 {
     int         fd;
+    int         fd_woody;
+    int         fd_stub;
     off_t       length_file;
     Elf64_Ehdr  *header;
-    Elf64_Phdr  *seg_load;
+    Elf64_Phdr  *seg_note;
+    Elf64_Addr  cp_e_entry_ov;
 } data;
 
 void    exit_clean(data *db, char *err, int exit_code);

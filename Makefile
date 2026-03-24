@@ -14,6 +14,7 @@ OBJS        = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 GREEN       = \033[0;32m
 RED         = \033[0;31m
 RESET       = \033[0m
+EXEC		= woody
 
 all: $(NAME)
 
@@ -42,7 +43,7 @@ clean:
 	@echo "$(RED)[- ] Objets supprimés (woody & libft).$(RESET)"
 
 fclean: clean
-	@rm -f $(NAME)
+	@rm -f $(NAME) $(EXEC)
 	@make fclean -sC $(LIB_DIR)
 	@echo "$(RED)[- ] Exécutable et libft.a supprimés.$(RESET)"
 

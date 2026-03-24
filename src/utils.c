@@ -11,6 +11,10 @@ void    exit_clean(data *db, char *err, int exit_code)
         close(db->fd);
     if (db->header)
         munmap(db->header, db->length_file);
+    if (db->fd_woody)
+        close(db->fd_woody);
+    if (db->fd_stub)
+        close(db->fd_stub);
 
     exit(exit_code);
 }
