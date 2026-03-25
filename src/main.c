@@ -42,9 +42,19 @@ void    transform_note_to_load(data *db)
     db->header->e_entry = db->seg_note->p_vaddr;
 }
 
-void    change_jmp_in_end_stub(data *db)
+void    patch_64bit_value(data *db, void *ptr, size_t size, uint64_t pattern, uint64_t replacement)
 {
-    
+    unsigned char *p = (unsigned char *)ptr;
+
+    for (size_t i = 0; i <= size - 8; i++)
+    {
+        if (*(uint64_t *)(p + i) == pattern)
+        {
+            *(uint64_t *)(p + i) = replacement;
+            return;
+        }
+    }
+    exit_clean(db, "Patch 64bit_value failed.", EXIT_FAILURE);
 }
 
 int main(int ac, char **av)
@@ -86,9 +96,12 @@ int main(int ac, char **av)
         exit_clean(&db, "create file woody failed.", EXIT_FAILURE);
     write(db.fd_woody, db.header, db.length_file);
     db.fd_stub = open("stub.bin", O_RDONLY);
+    if (db.fd_stub == -1)
+        exit_clean(&db, "Open stub file failed.", EXIT_FAILURE);
     char buffer[512] = {0};
     read(db.fd_stub, buffer, 512);
-    change_jmp_in_end_stub(&db);
+    patch_64bit_value(&db, buffer, 512, 0x1111222233334444, db.seg_note->p_vaddr);
+    patch_64bit_value(&db, buffer, 512, 0x5555666677778888, db.cp_e_entry_ov);
     write(db.fd_woody, buffer, 512);
     
 
