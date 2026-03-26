@@ -2,68 +2,38 @@
     global _start
 
 _start:
-    ; 1. SAUVEGARDE TOTALE
-    pushfq
-    push r15
-    push r14
-    push r13
-    push r12
-    push r11
-    push r10
-    push r9
-    push r8
-    push rbp
-    push rdi
-    push rsi
-    push rdx
-    push rcx
-    push rbx
+    ; 1. SAUVEGARDE MINIMALE
+    ; On ne sauve que ce que 'write' et 'syscall' vont modifier
     push rax
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push r11
 
     ; 2. AFFICHAGE "....WOODY...."
-    mov rax, 1
-    mov rdi, 1
-    lea rsi, [rel msg]
-    mov rdx, 14
+    mov rax, 1          ; syscall: write
+    mov rdi, 1          ; fd: stdout
+    lea rsi, [rel msg]  ; buf: message
+    mov rdx, 14         ; count: 14
     syscall
 
-    ; 3. RESTAURATION TOTALE
-    pop rax
-    pop rbx
-    pop rcx
-    pop rdx
-    pop rsi
-    pop rdi
-    pop rbp
-    pop r8
-    pop r9
-    pop r10
+    ; 3. RESTAURATION
     pop r11
-    pop r12
-    pop r13
-    pop r14
-    pop r15
-    popfq
-
-    ; 4. CALCUL DU SAUT DE FAÇON ISOLÉE
-    ; On push rax et rbx temporairement pour ne pas les salir
-    push rax
-    push rbx
-
-    lea rax, [rel _start]
-    mov rbx, 0x1111222233334444
-    sub rax, rbx
-    mov rbx, 0x5555666677778888
-    add rax, rbx
-
-    ; On déplace l'adresse cible dans r11 (registre sacrifiable)
-    mov r11, rax
-
-    ; On restaure rax et rbx dans leur état d'origine
-    pop rbx
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
     pop rax
 
-    ; 5. SAUT FINAL
+    ; 4. CALCUL DU SAUT (Utilise r11 et rcx qui sont volatils)
+    lea r11, [rel _start]
+    mov rcx, 0x1111222233334444 ; Signature vaddr (Patchée en C)
+    sub r11, rcx
+    mov rcx, 0x5555666677778888 ; Signature OEP (Patchée en C)
+    add r11, rcx
+
+    ; 5. JUMP
     jmp r11
 
 msg: db "....WOODY....", 10
