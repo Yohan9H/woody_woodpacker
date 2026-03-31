@@ -22,9 +22,29 @@ void    search_segement_pt_note(data *db)
         if (phdr->p_type == PT_NOTE)
         {
             db->seg_note = phdr;
-            break;
+            return;
         }
     }
+    exit_clean(db, "No NOTE segment found.", EXIT_FAILURE);
+}
+
+void    search_segement_pt_load(data *db)
+{
+    uint16_t    ph_num = db->header->e_phnum;
+    uint16_t    ph_size = db->header->e_phentsize;
+    uint8_t     *ph_table_ptr = (uint8_t *)db->header + db->header->e_phoff;
+    Elf64_Phdr  *phdr;
+
+    for (int i = 0; i < ph_num; i++)
+    {
+        phdr = (Elf64_Phdr *)(ph_table_ptr + (i * ph_size));
+        if (phdr->p_type == PT_LOAD && (phdr->p_flags & PF_X))
+        {
+            db->crypt_seg = phdr;
+            return;
+        }
+    }
+    exit_clean(db, "No LOAD segment found.", EXIT_FAILURE);
 }
 
 void    transform_note_to_load(data *db)
@@ -42,31 +62,64 @@ void    transform_note_to_load(data *db)
     db->header->e_entry = db->seg_note->p_vaddr;
 }
 
-void    patch_64bit_value(data *db, void *ptr, size_t size, uint64_t pattern, uint64_t replacement)
+void    patch_value(data *db, void *ptr, size_t size, uint64_t pattern, uint64_t replacement)
 {
     unsigned char *p = (unsigned char *)ptr;
+    int found = 0;
 
     for (size_t i = 0; i <= size - 8; i++)
     {
         if (*(uint64_t *)(p + i) == pattern)
         {
             *(uint64_t *)(p + i) = replacement;
-            return;
+            found++;
         }
     }
-    exit_clean(db, "Patch 64bit_value failed.", EXIT_FAILURE);
+    if (found == 0)
+    {
+        printf("Error: Pattern %016lx not found in stub.\n", pattern);
+        exit_clean(db, "Patch value failed.", EXIT_FAILURE);
+    }
+}
+
+uint64_t generate_key(data *db)
+{
+    uint64_t key;
+    int      fd_rand;
+
+    fd_rand = open("/dev/urandom", O_RDONLY);
+    if (fd_rand == -1)
+        exit_clean(db, "Open /dev/urandom failed.", EXIT_FAILURE);
+    if (read(fd_rand, &key, 8) != 8)
+    {
+        close(fd_rand);
+        exit_clean(db, "Read /dev/urandom failed.", EXIT_FAILURE);
+    }
+    close(fd_rand);
+    return (key);
+}
+
+void    crypt_xor(void *start, size_t size, uint64_t key)
+{
+    uint8_t *data = (uint8_t *)start;
+    uint8_t *key_bytes = (uint8_t *)&key;
+
+    for (size_t i = 0; i < size; i++)
+        data[i] ^= key_bytes[i % 8];
 }
 
 int main(int ac, char **av)
 {
     data db;
-    db.fd = 0;
-    db.fd_stub = 0;
-    db.fd_woody = 0;
+    db.fd = -1;
+    db.fd_stub = -1;
+    db.fd_woody = -1;
     db.length_file = 0;
     db.header = NULL;
     db.seg_note = NULL;
+    db.crypt_seg = NULL;
     db.cp_e_entry_ov = 0;
+    db.key = 0;
 
     if (ac != 2)
         exit_clean(&db, "Need one params.", EXIT_FAILURE);
@@ -87,9 +140,12 @@ int main(int ac, char **av)
     
     verif_file(&db);
     search_segement_pt_note(&db);
-    if (db.seg_note == NULL)
-        exit_clean(&db, "No PT_NOTE in your file.", EXIT_FAILURE);
     transform_note_to_load(&db);
+
+    search_segement_pt_load(&db);
+    db.key = generate_key(&db);
+    printf("key_value: %016lX\n", db.key);
+    crypt_xor((uint8_t *)db.header + db.crypt_seg->p_offset, db.crypt_seg->p_filesz, db.key);
     
     db.fd_woody = open("woody", O_WRONLY | O_CREAT | O_TRUNC, 0755);
     if (db.fd_woody == -1)
@@ -100,8 +156,11 @@ int main(int ac, char **av)
         exit_clean(&db, "Open stub file failed.", EXIT_FAILURE);
     char buffer[512] = {0};
     read(db.fd_stub, buffer, 512);
-    patch_64bit_value(&db, buffer, 512, 0x1111222233334444, db.seg_note->p_vaddr);
-    patch_64bit_value(&db, buffer, 512, 0x5555666677778888, db.cp_e_entry_ov);
+    patch_value(&db, buffer, 512, 0x1111222233334444, db.seg_note->p_vaddr);
+    patch_value(&db, buffer, 512, 0x5555666677778888, db.cp_e_entry_ov);
+    patch_value(&db, buffer, 512, 0x1122334455667788, db.crypt_seg->p_vaddr);
+    patch_value(&db, buffer, 512, 0xDEADBEEFCAFEBABE, db.crypt_seg->p_memsz);
+    patch_value(&db, buffer, 512, 0x0102030405060708, db.key);
     write(db.fd_woody, buffer, 512);
     
 

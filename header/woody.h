@@ -21,6 +21,8 @@ typedef struct data
     Elf64_Ehdr  *header;
     Elf64_Phdr  *seg_note;
     Elf64_Addr  cp_e_entry_ov;
+    Elf64_Phdr  *crypt_seg;
+    uint64_t    key;
 } data;
 
 void    exit_clean(data *db, char *err, int exit_code);
