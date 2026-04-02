@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
+#include <stddef.h>
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -25,7 +27,10 @@ typedef struct data
     uint64_t    key;
 } data;
 
-void    exit_clean(data *db, char *err, int exit_code);
-void    print_elf_header(Elf64_Ehdr *h);
+void        exit_clean(data *db, char *err, int exit_code);
+void        print_elf_header(Elf64_Ehdr *h);
+void        rc4_ksa(uint8_t *s, uint8_t *key, size_t key_len);
+void        rc4_prga(uint8_t *s, uint8_t *data, size_t data_len);
+void        rc4_crypt(uint8_t *data, size_t data_len, uint8_t *key, size_t key_len);
 
 #endif

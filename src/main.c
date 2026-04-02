@@ -99,15 +99,6 @@ uint64_t generate_key(data *db)
     return (key);
 }
 
-void    crypt_xor(void *start, size_t size, uint64_t key)
-{
-    uint8_t *data = (uint8_t *)start;
-    uint8_t *key_bytes = (uint8_t *)&key;
-
-    for (size_t i = 0; i < size; i++)
-        data[i] ^= key_bytes[i % 8];
-}
-
 int main(int ac, char **av)
 {
     data db;
@@ -145,7 +136,7 @@ int main(int ac, char **av)
     search_segement_pt_load(&db);
     db.key = generate_key(&db);
     printf("key_value: %016lX\n", db.key);
-    crypt_xor((uint8_t *)db.header + db.crypt_seg->p_offset, db.crypt_seg->p_filesz, db.key);
+    rc4_crypt((uint8_t *)db.header + db.crypt_seg->p_offset, db.crypt_seg->p_filesz, (uint8_t *)&db.key, 8);
     
     db.fd_woody = open("woody", O_WRONLY | O_CREAT | O_TRUNC, 0755);
     if (db.fd_woody == -1)

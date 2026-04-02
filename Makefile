@@ -9,7 +9,7 @@ LIBFT       = $(LIB_DIR)/libft.a
 LDFLAGS     = -L$(LIB_DIR) -lft
 AS          = nasm
 ASFLAGS     = -f elf64
-SRCS        = $(SRC_DIR)/main.c $(SRC_DIR)/utils.c
+SRCS        = $(SRC_DIR)/main.c $(SRC_DIR)/utils.c $(SRC_DIR)/rc4.c
 OBJS        = $(SRCS:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o)
 GREEN       = \033[0;32m
 RED         = \033[0;31m
