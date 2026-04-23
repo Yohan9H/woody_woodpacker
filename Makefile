@@ -22,7 +22,7 @@ $(NAME): $(LIBFT) $(OBJS)
 	@$(CC) $(CFLAGS) $(OBJS) $(LDFLAGS) -o $(NAME)
 	@clang -m64 -o sample resources/sample.c
 	@nasm -f bin stub.s -o stub.bin
-	@echo "$(GREEN)[+] $(NAME) compilé avec succès !$(RESET)"
+	@echo -e "$(GREEN)[+] $(NAME) compilé avec succès !$(RESET)"
 
 $(LIBFT):
 	@echo "Compiling libft..."
@@ -42,12 +42,12 @@ $(OBJ_DIR):
 clean:
 	@rm -rf $(OBJ_DIR)
 	@make clean -sC $(LIB_DIR)
-	@echo "$(RED)[- ] Objets supprimés (woody & libft).$(RESET)"
+	@echo -e "$(RED)[- ] Objets supprimés (woody & libft).$(RESET)"
 
 fclean: clean
 	@rm -f $(NAME) $(EXEC) sample stub.bin
 	@make fclean -sC $(LIB_DIR)
-	@echo "$(RED)[- ] Exécutable et libft.a supprimés.$(RESET)"
+	@echo -e "$(RED)[- ] Exécutable et libft.a supprimés.$(RESET)"
 
 re: fclean all
 
