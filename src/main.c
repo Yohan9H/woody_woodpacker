@@ -136,8 +136,12 @@ int main(int ac, char **av)
     search_segement_pt_load(&db);
     db.key = generate_key(&db);
     printf("key_value: %016lX\n", db.key);
-    rc4_crypt((uint8_t *)db.header + db.crypt_seg->p_offset, db.crypt_seg->p_filesz, (uint8_t *)&db.key, 8);
-    
+    uint64_t skip_headers = 0;
+        if (db.crypt_seg->p_offset == 0)
+            skip_headers = db.header->e_phoff + (db.header->e_phnum * db.header->e_phentsize);
+    rc4_crypt((uint8_t *)db.header + db.crypt_seg->p_offset + skip_headers, 
+              db.crypt_seg->p_filesz - skip_headers, 
+              (uint8_t *)&db.key, 8);
     db.fd_woody = open("woody", O_WRONLY | O_CREAT | O_TRUNC, 0755);
     if (db.fd_woody == -1)
         exit_clean(&db, "create file woody failed.", EXIT_FAILURE);
@@ -149,11 +153,10 @@ int main(int ac, char **av)
     read(db.fd_stub, buffer, 512);
     patch_value(&db, buffer, 512, 0x1111222233334444, db.seg_note->p_vaddr);
     patch_value(&db, buffer, 512, 0x5555666677778888, db.cp_e_entry_ov);
-    patch_value(&db, buffer, 512, 0x1122334455667788, db.crypt_seg->p_vaddr);
-    patch_value(&db, buffer, 512, 0xDEADBEEFCAFEBABE, db.crypt_seg->p_memsz);
+    patch_value(&db, buffer, 512, 0x1122334455667788, db.crypt_seg->p_vaddr + skip_headers);
+    patch_value(&db, buffer, 512, 0xDEADBEEFCAFEBABE, db.crypt_seg->p_filesz - skip_headers);
     patch_value(&db, buffer, 512, 0x0102030405060708, db.key);
     write(db.fd_woody, buffer, 512);
-    
 
     exit_clean(&db, NULL, EXIT_SUCCESS);
 }

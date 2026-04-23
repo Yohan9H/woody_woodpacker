@@ -7,13 +7,13 @@ void    exit_clean(data *db, char *err, int exit_code)
     else if (err != NULL)
         ft_putstr_fd(err, 2);
 
-    if (db->fd >= 0)
+    if (db->fd)
         close(db->fd);
-    if (db->header >= 0)
+    if (db->header)
         munmap(db->header, db->length_file);
-    if (db->fd_woody >= 0)
+    if (db->fd_woody)
         close(db->fd_woody);
-    if (db->fd_stub >= 0)
+    if (db->fd_stub)
         close(db->fd_stub);
 
     exit(exit_code);
